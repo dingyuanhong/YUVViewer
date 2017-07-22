@@ -280,11 +280,33 @@ int CYUVViewerDlg::GetFrameSize()
 	CComboBox * box = (CComboBox*)GetDlgItem(IDC_COMBO_FOURCC);
 	int sel = box->GetCurSel();
 	if (sel == -1) return -1;
-	int width = m_width;
-	int height = m_height;
-	if (width <= 0) return -1;
-	if (height <= 0) return -1;
-	return width*height * 3 / 2;
+	int w = m_width;
+	int h = m_height;
+	if (w <= 0) return -1;
+	if (h <= 0) return -1;
+
+	switch (sel)
+	{
+	case 0: //YV12
+		break;
+	case 1:  //I420
+		return w*h * 3 / 2;
+		break;
+	case 2:  //YUYV
+		break;
+	case 3:  //YVYU
+		break;
+	case 4:  //Y
+		break;
+	case 5:  //UYVY
+		break;
+	case 6:  //NV12
+		break;
+	case 7:  //NV21
+		break;
+	}
+
+	return w*h * 3 / 2;
 }
 
 uint32 CYUVViewerDlg::GetFourcc()
@@ -294,21 +316,21 @@ uint32 CYUVViewerDlg::GetFourcc()
 	if (sel == -1) return -1;
 	//switch (sel)
 	//{
-	//case 0:
+	//case 0: //YV12
 	//	return libyuv::CanonicalFourCC(libyuv::FOURCC_YV12);
-	//case 1:
+	//case 1:  //I420
 	//	return libyuv::CanonicalFourCC(libyuv::FOURCC_I420);
-	//case 2:
+	//case 2:  //YUYV
 	//	return libyuv::CanonicalFourCC(libyuv::FOURCC_YUYV);
-	//case 3:
+	//case 3:  //YVYU
 	//	//return libyuv::CanonicalFourCC(libyuv::FOURCC_I420); ???
-	//case 4:
+	//case 4:  //Y
 	//	//return libyuv::CanonicalFourCC(libyuv::FOURCC_I420); ???
-	//case 5:
+	//case 5:  //UYVY
 	//	return libyuv::CanonicalFourCC(libyuv::FOURCC_UYVY);
-	//case 6:
+	//case 6:  //NV12
 	//	return libyuv::CanonicalFourCC(libyuv::FOURCC_NV12);
-	//case 7:
+	//case 7:  //NV21
 	//	return libyuv::CanonicalFourCC(libyuv::FOURCC_NV21);
 	//}
 	return libyuv::CanonicalFourCC(libyuv::FOURCC_I420);
@@ -318,17 +340,46 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 {
 	int display = GetDisplay();
 	if (display <= 0) return;
+	int type = 0;
 	switch (display)
 	{
 	case 1://Y
-
+		type |= 0x1;
 		break;
 	case 2://U
+		type |= 0x02;
 		break;
 	case 3://V
+		type |= 0x04;
 		break;
 	case 4://UV
+		type |= 0x06;
 		break;
+	}
+
+	CComboBox * box = (CComboBox*)GetDlgItem(IDC_COMBO_FOURCC);
+	int sel = box->GetCurSel();
+	if (sel != -1)
+	{
+		switch (sel)
+		{
+		case 0: //YV12
+			break;
+		case 1:  //I420
+			break;
+		case 2:  //YUYV
+			break;
+		case 3:  //YVYU
+			break;
+		case 4:  //Y
+			break;
+		case 5:  //UYVY
+			break;
+		case 6:  //NV12
+			break;
+		case 7:  //NV21
+			break;
+		}
 	}
 }
 
