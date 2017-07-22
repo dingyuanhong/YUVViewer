@@ -507,10 +507,19 @@ void CYUVViewerDlg::OnBnClickedBtnFile()
 
 		//通过正则获取宽高
 		std::string name = P2AString(Name.GetBuffer());
-		std::regex regPattern("*\d+\D\d+*");
-		BOOL bValid = std::regex_match(name, regPattern);
+		std::regex regPattern("(\\d+)\\D+(\\d+)\\D*");
+		std::cmatch result;
+		BOOL bValid = std::regex_search(name.c_str(), result, regPattern);
 		int width = 0;
 		int height = 0;
+
+		if (result.size() >= 3)
+		{
+			std::string ws = result[1].str();
+			std::string hs = result[2].str();
+			width = atoi(ws.c_str());
+			height = atoi(hs.c_str());
+		}
 
 		int index = -1;
 		for (int i = 0; i < TABLESIZE(RESOLUTION_TYPE_NAME); i++)
@@ -524,15 +533,18 @@ void CYUVViewerDlg::OnBnClickedBtnFile()
 		CComboBox *box = (CComboBox*)GetDlgItem(IDC_COMBO_RESOLUTION);
 		if (index == -1)
 		{
-			box->SetCurSel(TABLESIZE(RESOLUTION_TYPE_NAME));
-			SetResolutionSel(-1);
+			if (width != 0 || height != 0)
+			{
+				box->SetCurSel(TABLESIZE(RESOLUTION_TYPE_NAME));
+				SetResolutionSel(-1);
 
-			CString strWidth;
-			strWidth.Format(_T("%d"), width);
-			CString strHeight;
-			strHeight.Format(_T("%d"), height);
-			GetDlgItem(IDC_EDIT_WIDTH)->SetWindowText(strWidth);
-			GetDlgItem(IDC_EDIT_HEIGHT)->SetWindowText(strHeight);
+				CString strWidth;
+				strWidth.Format(_T("%d"), width);
+				CString strHeight;
+				strHeight.Format(_T("%d"), height);
+				GetDlgItem(IDC_EDIT_WIDTH)->SetWindowText(strWidth);
+				GetDlgItem(IDC_EDIT_HEIGHT)->SetWindowText(strHeight);
+			}
 		}
 		else
 		{
