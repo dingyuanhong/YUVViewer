@@ -284,29 +284,7 @@ int CYUVViewerDlg::GetFrameSize()
 	int h = m_height;
 	if (w <= 0) return -1;
 	if (h <= 0) return -1;
-
-	switch (sel)
-	{
-	case 0: //YV12
-		break;
-	case 1:  //I420
-		return w*h * 3 / 2;
-		break;
-	case 2:  //YUYV
-		break;
-	case 3:  //YVYU
-		break;
-	case 4:  //Y
-		break;
-	case 5:  //UYVY
-		break;
-	case 6:  //NV12
-		break;
-	case 7:  //NV21
-		break;
-	}
-
-	return w*h * 3 / 2;
+	return w*h * YUV_Division[sel].num / YUV_Division[sel].den;
 }
 
 uint32 CYUVViewerDlg::GetFourcc()
@@ -314,26 +292,7 @@ uint32 CYUVViewerDlg::GetFourcc()
 	CComboBox * box = (CComboBox*)GetDlgItem(IDC_COMBO_FOURCC);
 	int sel = box->GetCurSel();
 	if (sel == -1) return -1;
-	//switch (sel)
-	//{
-	//case 0: //YV12
-	//	return libyuv::CanonicalFourCC(libyuv::FOURCC_YV12);
-	//case 1:  //I420
-	//	return libyuv::CanonicalFourCC(libyuv::FOURCC_I420);
-	//case 2:  //YUYV
-	//	return libyuv::CanonicalFourCC(libyuv::FOURCC_YUYV);
-	//case 3:  //YVYU
-	//	//return libyuv::CanonicalFourCC(libyuv::FOURCC_I420); ???
-	//case 4:  //Y
-	//	//return libyuv::CanonicalFourCC(libyuv::FOURCC_I420); ???
-	//case 5:  //UYVY
-	//	return libyuv::CanonicalFourCC(libyuv::FOURCC_UYVY);
-	//case 6:  //NV12
-	//	return libyuv::CanonicalFourCC(libyuv::FOURCC_NV12);
-	//case 7:  //NV21
-	//	return libyuv::CanonicalFourCC(libyuv::FOURCC_NV21);
-	//}
-	return libyuv::CanonicalFourCC(libyuv::FOURCC_I420);
+	return libyuv::CanonicalFourCC(FOURCC_YUV_TYPE[sel]);
 }
 
 void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
@@ -353,7 +312,7 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 		type |= 0x04;
 		break;
 	case 4://UV
-		type |= 0x06;
+		type |= 0x02 | 0x04;
 		break;
 	}
 
@@ -361,25 +320,247 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 	int sel = box->GetCurSel();
 	if (sel != -1)
 	{
-		switch (sel)
+		switch (FOURCC_YUV_TYPE[sel])
 		{
-		case 0: //YV12
+		case libyuv::FOURCC_YV12: //YV12
+			{
+				int planar = size * 2 / 3;
+				if ((type & 0x1) != 0x1)//Y
+				{
+					memset(frame, 0, planar);
+				}
+				if ((type & 0x2) != 0x2)//U
+				{
+					int bits = planar * 8 / 4; //位数
+					int bit_surplus = bits % 8;
+					int count = bits / 8;
+					if (bit_surplus > 0)
+					{
+						frame[planar + count] &= 0x0F;
+						memset(frame + planar + count + 1, 0, count);
+					}
+					else
+					{
+						memset(frame + planar + count, 0, count);
+					}
+				}
+				if ((type & 0x4) != 0x4)//V
+				{
+					int bits = planar * 8 / 4; //位数
+					int bit_surplus = bits % 8;
+					int count = bits / 8;
+
+					memset(frame + planar, 0, count);
+					if (bit_surplus > 0)
+					{
+						frame[planar] &= 0xF0;
+					}
+				}
+			}
 			break;
-		case 1:  //I420
+		case libyuv::FOURCC_I420:  //I420
+			{
+				int planar = size * 2 / 3;
+				if ((type & 0x1) != 0x1)//Y
+				{
+					memset(frame, 0, planar);
+				}
+				if ((type & 0x2) != 0x2)//U
+				{
+					int bits = planar * 8 / 4; //位数
+					int bit_surplus = bits % 8;
+					int count = bits / 8;
+					
+					memset(frame + planar, 0, count);
+					if (bit_surplus > 0)
+					{
+						frame[planar] &=  0xF0;
+					}
+				}
+				if ((type & 0x4) != 0x4)//V
+				{
+					int bits = planar * 8 / 4; //位数
+					int bit_surplus = bits % 8;
+					int count = bits / 8;
+					if (bit_surplus > 0)
+					{
+						frame[planar + count] &= 0x0F;
+						memset(frame + planar + count + 1, 0, count);
+					}
+					else
+					{
+						memset(frame + planar + count, 0, count);
+					}
+					
+				}
+			}
 			break;
-		case 2:  //YUYV
+		case libyuv::FOURCC_YUYV:  //YUYV
+			if ((type & 0x1) != 0x1)//Y
+			{
+				int i = 0;
+				while (i < size)
+				{
+					frame[i] = 0;
+					i += 2;
+				}
+			}
+			if ((type & 0x2) != 0x2)//U
+			{
+				int i = 1;
+				while (i < size)
+				{
+					frame[i] = 0;
+					i += 4;
+				}
+			}
+			if ((type & 0x4) != 0x4)//V
+			{
+				int i = 3;
+				while (i < size)
+				{
+					frame[i] = 0;
+					i += 4;
+				}
+			}
 			break;
-		case 3:  //YVYU
+		case libyuv::FOURCC_I400:  //Y
+			if ((type & 0x1) != 0x1)//Y
+			{
+				memset(frame, 0, size);
+			}
+			if ((type & 0x2) != 0x2)
+			{
+			}
+			if ((type & 0x4) != 0x4)
+			{
+			}
 			break;
-		case 4:  //Y
+		case libyuv::FOURCC_UYVY:  //UYVY
+			if ((type & 0x1) != 0x1)//Y
+			{
+				int i = 1;
+				while (i < size)
+				{
+					frame[i] = 0;
+					i += 2;
+				}
+			}
+			if ((type & 0x2) != 0x2)//U
+			{
+				int i = 0;
+				while (i < size)
+				{
+					frame[i] = 0;
+					i += 4;
+				}
+			}
+			if ((type & 0x4) != 0x4)//V
+			{
+				int i = 2;
+				while (i < size)
+				{
+					frame[i] = 0;
+					i += 4;
+				}
+			}
 			break;
-		case 5:  //UYVY
+		case libyuv::FOURCC_NV12:  //NV12
+			{
+				int planar = size * 2 / 3;
+				if ((type & 0x1) != 0x1)
+				{
+					memset(frame, 0, planar);
+				}
+				if ((type & 0x2) != 0x2 || 
+					(type & 0x4) != 0x4)
+				{
+					int bit = 0;	//U 默认
+					if ((type & 0x4) != 0x4)
+					{
+						bit = 2;
+					}
+					int bits = planar*8/4; //位数
+					int count = bits / 8;
+					int bit_surplus = bits % 8;
+					//2位
+					int i = 0;
+					
+					int bit_table[] = {0xFC,0xF3,0xCF,0x3F};
+					while (i <= size  && (i == size && bit < bit_surplus))
+					{
+						frame[i] = frame[i] & (bit_table[bit/2]);
+						bit += 4;
+						if (bit >= 8)
+						{
+							i++;
+							bit = 0;
+						}
+					}
+				}
+			}
 			break;
-		case 6:  //NV12
-			break;
-		case 7:  //NV21
+		case libyuv::FOURCC_NV21:  //NV21
+			{
+				int planar = size * 2 / 3;
+				if ((type & 0x1) != 0x1)
+				{
+					memset(frame, 0, planar);
+				}
+				if ((type & 0x2) != 0x2 || 
+					(type & 0x4) != 0x4)
+				{
+					int bit = 0;			//V 默认
+					if ((type & 0x2) != 0x2)//U
+					{
+						bit = 2;
+					}
+					int bits = planar * 8 / 4; //位数
+					int count = bits / 8;
+					int bit_surplus = bits % 8;
+					//2位
+					int i = 0;
+					int bit_table[] = { 0xFC,0xF3,0xCF,0x3F };
+					while (i <= size && (i == size && bit < bit_surplus))
+					{
+						frame[i] = frame[i] & (bit_table[bit / 2]);
+						bit += 4;
+						if (bit >= 8)
+						{
+							i++;
+							bit = 0;
+						}
+					}
+				}
+			}
 			break;
 		}
+	}
+}
+
+static void YVYU2YUYV(uint8_t * frame, int size)
+{
+	int planar = size / 4;
+	int uIndex = 1;
+	int vIndex = 3;
+	for (int i = 0; i < planar; i++)
+	{
+		uint8_t tmp = frame[uIndex + i * 4];
+		frame[uIndex + i * 4] = frame[vIndex + i * 4];
+		frame[vIndex + i * 4] = tmp;
+	}
+}
+
+void CYUVViewerDlg::Process(uint8_t * frame, int size)
+{
+	if (frame == NULL) return;
+	CComboBox * box = (CComboBox*)GetDlgItem(IDC_COMBO_FOURCC);
+	int sel = box->GetCurSel();
+	if (sel == -1) return ;
+	//当YVYU 时,讲数据处理成YUYV用于libyuv处理
+	if (sel == 3)
+	{
+		YVYU2YUYV(frame,size);
 	}
 }
 
@@ -508,6 +689,7 @@ void CYUVViewerDlg::DrawYUV()
 		uint8_t * argb = (uint8_t*)malloc(len);
 		if (argb != NULL)
 		{
+			Process(frame, frameSize);
 			libyuv::ConvertToARGB(frame, frameSize, argb, width * 4, 0, 0, width, height, width, height,
 				libyuv::RotationMode::kRotateNone, GetFourcc());
 

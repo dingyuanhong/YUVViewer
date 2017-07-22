@@ -39,6 +39,7 @@ private:
 	int GetDisplay();
 	void DrawYUV();
 	void ProcessYUV(uint8_t * frame, int size);
+	void Process(uint8_t * frame, int size);
 
 	uint32 GetFourcc();
 	void InitBITMAP(int width, int height);

@@ -55,15 +55,49 @@ static TCHAR *RESOLUTION_TYPE_NAME[] = {
 
 static TCHAR* YUV_TYPE[] =
 {
-	NAME(YV12),			//FOURCC_YV12
+	NAME(YV12),			//FOURCC_YV12  w*h*3/2
 	NAME(I420),			//FOURCC_I420  w*h*3/2
-	NAME(YUY2 | YUYV),	//FOURCC_YUYV  
-	NAME(YVYU),			//
-	NAME(Only Y),		//
-	NAME(UYVY | UYNV | Y41P),	//FOURCC_UYVY
-	NAME(NV12),					//FOURCC_NV12
-	NAME(NV21)					//FOURCC_NV21
+	NAME(YUY2 | YUYV),	//FOURCC_YUYV  w*h*2
+	NAME(YVYU),			//			   w*h*2
+	NAME(Only Y),		//FOURCC_I400	w*h
+	NAME(UYVY | UYNV),	//FOURCC_UYVY	w*h*2
+	NAME(NV12),			//FOURCC_NV12	w*h*3/2
+	NAME(NV21)			//FOURCC_NV21	w*h*3/2
 };
+
+#include "libyuv.h"
+
+static int FOURCC_YUV_TYPE[] =
+{
+	libyuv::FOURCC_YV12,
+	libyuv::FOURCC_I420,
+	libyuv::FOURCC_YUYV,
+	libyuv::FOURCC_YUYV,
+	libyuv::FOURCC_I400,
+	libyuv::FOURCC_UYVY,
+	libyuv::FOURCC_NV12,
+	libyuv::FOURCC_NV21
+};
+
+typedef struct Division
+{
+	int num;//·Ö×Ó
+	int den;//·ÖÄ¸
+}Division;
+
+#define DIV(a,b) {a,b}
+static Division YUV_Division[] =
+{
+	DIV(3,2),
+	DIV(3,2),
+	DIV(2,1),
+	DIV(2,1),
+	DIV(1,1),
+	DIV(2,1),
+	DIV(3,2),
+	DIV(3,2)
+};
+#undef DIV
 
 static TCHAR* YUV_TYPE_ORDER[] =
 {
