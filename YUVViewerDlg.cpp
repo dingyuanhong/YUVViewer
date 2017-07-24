@@ -295,6 +295,17 @@ uint32 CYUVViewerDlg::GetFourcc()
 	return libyuv::CanonicalFourCC(FOURCC_YUV_TYPE[sel]);
 }
 
+//http://www.cnblogs.com/biglucky/p/4599331.html
+//如果要保留Y分量，那么需将UV置为0x80,如需置白/黑色,Y分量设为FF/00
+//UV是色差分量，UV为0就会全是绿色，全为0x80的时候才能看到灰度图。
+//通过RGB转换函数就可见原因
+//R = Y + 1.4075 *（V - 128）
+//G = Y – 0.3455 *（U –128） – 0.7169 *（V –128）
+//B = Y + 1.779 *（U – 128）
+//RGB整数转换算法
+//r = Y + (V - 128) + (((U - 128) * 103) >> 8);
+//g = Y - (((U - 128) * 88) >> 8) + (((V - 128) * 183) >> 8)
+//b = Y + (U - 128) + (((U - 128) * 198) >> 8)
 void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 {
 	int display = GetDisplay();
@@ -316,6 +327,8 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 		break;
 	}
 
+#define Y_CLEAN 0x7F //灰色
+
 	CComboBox * box = (CComboBox*)GetDlgItem(IDC_COMBO_FOURCC);
 	int sel = box->GetCurSel();
 	if (sel != -1)
@@ -327,34 +340,17 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 				int planar = size * 2 / 3;
 				if ((type & 0x1) != 0x1)//Y
 				{
-					memset(frame, 0, planar);
+					memset(frame, Y_CLEAN, planar);
 				}
 				if ((type & 0x2) != 0x2)//U
 				{
-					int bits = planar * 8 / 4; //位数
-					int bit_surplus = bits % 8;
-					int count = bits / 8;
-					if (bit_surplus > 0)
-					{
-						frame[planar + count] &= 0x0F;
-						memset(frame + planar + count + 1, 0, count);
-					}
-					else
-					{
-						memset(frame + planar + count, 0, count);
-					}
+					int count = planar / 4;
+					memset(frame + planar + count, 0x80, count);
 				}
 				if ((type & 0x4) != 0x4)//V
 				{
-					int bits = planar * 8 / 4; //位数
-					int bit_surplus = bits % 8;
-					int count = bits / 8;
-
-					memset(frame + planar, 0, count);
-					if (bit_surplus > 0)
-					{
-						frame[planar] &= 0xF0;
-					}
+					int count = planar / 4;
+					memset(frame + planar, 0x80, count);
 				}
 			}
 			break;
@@ -363,35 +359,17 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 				int planar = size * 2 / 3;
 				if ((type & 0x1) != 0x1)//Y
 				{
-					memset(frame, 0, planar);
+					memset(frame, Y_CLEAN, planar);
 				}
 				if ((type & 0x2) != 0x2)//U
 				{
-					int bits = planar * 8 / 4; //位数
-					int bit_surplus = bits % 8;
-					int count = bits / 8;
-					
-					memset(frame + planar, 0, count);
-					if (bit_surplus > 0)
-					{
-						frame[planar] &=  0xF0;
-					}
+					int count = planar / 4;
+					memset(frame + planar, 0x80, count);
 				}
 				if ((type & 0x4) != 0x4)//V
 				{
-					int bits = planar * 8 / 4; //位数
-					int bit_surplus = bits % 8;
-					int count = bits / 8;
-					if (bit_surplus > 0)
-					{
-						frame[planar + count] &= 0x0F;
-						memset(frame + planar + count + 1, 0, count);
-					}
-					else
-					{
-						memset(frame + planar + count, 0, count);
-					}
-					
+					int count = planar / 4;
+					memset(frame + planar + count, 0x80, count);
 				}
 			}
 			break;
@@ -401,7 +379,7 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 				int i = 0;
 				while (i < size)
 				{
-					frame[i] = 0;
+					frame[i] = Y_CLEAN;
 					i += 2;
 				}
 			}
@@ -410,7 +388,7 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 				int i = 1;
 				while (i < size)
 				{
-					frame[i] = 0;
+					frame[i] = 0x80;
 					i += 4;
 				}
 			}
@@ -419,7 +397,7 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 				int i = 3;
 				while (i < size)
 				{
-					frame[i] = 0;
+					frame[i] = 0x80;
 					i += 4;
 				}
 			}
@@ -427,7 +405,7 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 		case libyuv::FOURCC_I400:  //Y
 			if ((type & 0x1) != 0x1)//Y
 			{
-				memset(frame, 0, size);
+				memset(frame, Y_CLEAN, size);
 			}
 			if ((type & 0x2) != 0x2)
 			{
@@ -442,7 +420,7 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 				int i = 1;
 				while (i < size)
 				{
-					frame[i] = 0;
+					frame[i] = Y_CLEAN;
 					i += 2;
 				}
 			}
@@ -451,7 +429,7 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 				int i = 0;
 				while (i < size)
 				{
-					frame[i] = 0;
+					frame[i] = 0x80;
 					i += 4;
 				}
 			}
@@ -460,42 +438,41 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 				int i = 2;
 				while (i < size)
 				{
-					frame[i] = 0;
+					frame[i] = 0x80;
 					i += 4;
 				}
 			}
 			break;
 		case libyuv::FOURCC_NV12:  //NV12
 			{
-				int planar = size * 2 / 3;
-				if ((type & 0x1) != 0x1)
+				if ((type & 0x1) != 0x1)//Y
 				{
-					memset(frame, 0, planar);
-				}
-				if ((type & 0x2) != 0x2 || 
-					(type & 0x4) != 0x4)
-				{
-					int bit = 0;	//U 默认
-					if ((type & 0x4) != 0x4)
+					int i = 1;
+					while (i < size)
 					{
-						bit = 2;
+						frame[i] = Y_CLEAN;
+						i += 2;
 					}
-					int bits = planar*8/4; //位数
-					int count = bits / 8;
-					int bit_surplus = bits % 8;
-					//2位
-					int i = 0;
-					
-					int bit_table[] = {0xFC,0xF3,0xCF,0x3F};
-					while (i <= size  && (i == size && bit < bit_surplus))
+				}
+				int planar = size * 2 / 3;
+				if ((type & 0x2) != 0x2)//U
+				{
+					int count = planar / 4;
+					int i = planar;
+					while (i < size)
 					{
-						frame[i] = frame[i] & (bit_table[bit/2]);
-						bit += 4;
-						if (bit >= 8)
-						{
-							i++;
-							bit = 0;
-						}
+						frame[i] = 0x80;
+						i+=2;
+					}
+				}
+				if ((type & 0x4) != 0x4)//V
+				{
+					int count = planar / 4;
+					int i = planar + 1;
+					while (i < size)
+					{
+						frame[i] = 0x80;
+						i+=2;
 					}
 				}
 			}
@@ -505,31 +482,26 @@ void CYUVViewerDlg::ProcessYUV(uint8_t * frame, int size)
 				int planar = size * 2 / 3;
 				if ((type & 0x1) != 0x1)
 				{
-					memset(frame, 0, planar);
+					memset(frame, Y_CLEAN, planar);
 				}
-				if ((type & 0x2) != 0x2 || 
-					(type & 0x4) != 0x4)
+				if ((type & 0x2) != 0x2)//U
 				{
-					int bit = 0;			//V 默认
-					if ((type & 0x2) != 0x2)//U
+					int count = planar / 4;
+					int i = planar + 1;
+					while (i < size)
 					{
-						bit = 2;
+						frame[i] = 0x80;
+						i += 2;
 					}
-					int bits = planar * 8 / 4; //位数
-					int count = bits / 8;
-					int bit_surplus = bits % 8;
-					//2位
-					int i = 0;
-					int bit_table[] = { 0xFC,0xF3,0xCF,0x3F };
-					while (i <= size && (i == size && bit < bit_surplus))
+				}
+				if ((type & 0x4) != 0x4)//V
+				{
+					int count = planar / 4;
+					int i = planar;
+					while (i < size)
 					{
-						frame[i] = frame[i] & (bit_table[bit / 2]);
-						bit += 4;
-						if (bit >= 8)
-						{
-							i++;
-							bit = 0;
-						}
+						frame[i] = 0x80;
+						i += 2;
 					}
 				}
 			}
