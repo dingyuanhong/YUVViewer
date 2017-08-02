@@ -717,7 +717,7 @@ void CYUVViewerDlg::OnBnClickedBtnFile()
 
 		//通过正则获取宽高
 		std::string name = P2AString(Name.GetBuffer());
-		std::regex regPattern("(\\d+)\\D+(\\d+)\\D*");
+		std::regex regPattern("(\\d+)\\D(\\d+)\\D*");
 		std::cmatch result;
 		BOOL bValid = std::regex_search(name.c_str(), result, regPattern);
 		int width = 0;
