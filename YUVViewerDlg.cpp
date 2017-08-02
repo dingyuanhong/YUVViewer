@@ -652,8 +652,13 @@ void CYUVViewerDlg::DrawYUV()
 	fopen_s(&fp,file.c_str(), "rb");
 	if (fp != NULL) {
 		fseek(fp, pos, SEEK_SET);
-		fread(frame, frameSize, 1, fp);
+		size_t ret = fread(frame, 1, frameSize, fp);
 		fclose(fp);
+		if (ret != frameSize)
+		{
+			free(frame);
+			return;
+		}
 
 		ProcessYUV(frame, frameSize);
 
