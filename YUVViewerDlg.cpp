@@ -698,6 +698,17 @@ void CYUVViewerDlg::OnTimer(UINT_PTR id)
 	}
 }
 
+inline ULONGLONG GetFileSize(const char * file)
+{
+	FILE *fp = NULL;
+	fp = fopen(file,"rb");
+	if (fp == NULL) return 0;
+	fseek(fp,0,SEEK_END);
+	ULONGLONG size = ftell(fp);
+	fclose(fp);
+	return size;
+}
+
 void CYUVViewerDlg::OnBnClickedBtnFile()
 {
 	CFileDialog dlg(true);
@@ -706,11 +717,8 @@ void CYUVViewerDlg::OnBnClickedBtnFile()
 		CString Path = dlg.GetPathName();
 		CString Name = dlg.GetFileName();
 		ULONGLONG size;
-		CFileStatus fileStatus;
-		if (CFile::GetStatus(Path, fileStatus))
-		{
-			size = fileStatus.m_size;
-		}
+		size = ::GetFileSize(P2AString(Path.GetBuffer()).c_str());
+
 		GetDlgItem(IDC_EDIT_FILE)->SetWindowText(Path);
 		m_filesize = size;
 		m_index = 0;
