@@ -791,6 +791,12 @@ void CYUVViewerDlg::OnBnClickedBtnRefresh()
 
 void CYUVViewerDlg::OnBnClickedBtnJump()
 {
+	CString strText;
+	GetDlgItem(IDC_EDIT_FIRST)->GetWindowText(strText);
+	int index = _ttoi(strText.GetBuffer());
+	if (index > 0) {
+		m_index = index;
+	}
 }
 
 void CYUVViewerDlg::OnBnClickedBtnForward()
