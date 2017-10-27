@@ -641,8 +641,8 @@ void CYUVViewerDlg::DrawYUV()
 	if (frameSize > fileSize) return;
 	int width = m_width;
 	int height = m_height;
-
-	int pos = m_index * frameSize;
+	int64_t index = m_index;
+	int64_t pos = index * frameSize;
 	CString strPath = GetFilePath();
 	std::string file =  P2AString(strPath.GetBuffer());
 	
@@ -651,7 +651,7 @@ void CYUVViewerDlg::DrawYUV()
 	FILE * fp = NULL;
 	fopen_s(&fp,file.c_str(), "rb");
 	if (fp != NULL) {
-		fseek(fp, pos, SEEK_SET);
+		_fseeki64(fp, pos, SEEK_SET);
 		size_t ret = fread(frame, 1, frameSize, fp);
 		fclose(fp);
 		if (ret != frameSize)
@@ -698,13 +698,13 @@ void CYUVViewerDlg::OnTimer(UINT_PTR id)
 	}
 }
 
-inline ULONGLONG GetFileSize(const char * file)
+inline __int64 GetFileSize(const char * file)
 {
 	FILE *fp = NULL;
 	fp = fopen(file,"rb");
 	if (fp == NULL) return 0;
 	fseek(fp,0,SEEK_END);
-	ULONGLONG size = ftell(fp);
+	__int64 size = _ftelli64(fp);
 	fclose(fp);
 	return size;
 }
