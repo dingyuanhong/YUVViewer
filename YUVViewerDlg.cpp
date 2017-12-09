@@ -145,6 +145,8 @@ BOOL CYUVViewerDlg::OnInitDialog()
 	}
 	box->SetCurSel(0);
 
+	GetDlgItem(IDC_EDIT_RATE)->SetWindowText(_T("30"));
+
 	SetFrame(0,0);
 	UpdataFrame(m_index, 0);
 	InitBITMAP(GetWidth(),GetHeight());
@@ -819,7 +821,16 @@ void CYUVViewerDlg::OnBnClickedBtnPlay()
 {
 	m_width = GetWidth();
 	m_height = GetHeight();
-	SetTimer(TIME_PALY_YUV,1000/30,NULL);
+	CString rateStr;
+	GetDlgItem(IDC_EDIT_RATE)->GetWindowText(rateStr);
+	int rate = _ttoi(rateStr.GetBuffer());
+	if (rate <= 0)
+	{
+		AfxMessageBox(_T("ÇëÉèÖÃÖ¡ÂÊ."));
+		return;
+	}
+	UINT time = 1000 / rate;
+	SetTimer(TIME_PALY_YUV, time,NULL);
 }
 
 void CYUVViewerDlg::OnBnClickedBtnPause()
