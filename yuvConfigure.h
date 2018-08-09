@@ -65,7 +65,8 @@ static TCHAR* YUV_TYPE[] =
 	NAME(NV21),			//FOURCC_NV21	w*h*3/2
 	NAME(RGB),
 	NAME(RGBA),
-	NAME(ABGR)
+	NAME(ABGR),
+	NAME(ARGB)
 };
 
 #include "libyuv.h"
@@ -82,7 +83,8 @@ static int FOURCC_YUV_TYPE[] =
 	libyuv::FOURCC_NV21,
 	libyuv::FOURCC_24BG,
 	libyuv::FOURCC_RGBA,
-	libyuv::FOURCC_ABGR
+	libyuv::FOURCC_ABGR,
+	libyuv::FOURCC_ARGB
 };
 
 typedef struct Division
@@ -104,7 +106,8 @@ static Division YUV_Division[] =
 	DIV(3,2),
 	DIV(3,1),
 	DIV(4,1),
-	DIV(4,1)
+	DIV(4,1),
+	DIV(4,1),
 };
 #undef DIV
 
@@ -120,7 +123,8 @@ static TCHAR* YUV_TYPE_ORDER[] =
 	NAME([Y][VU]),
 	NAME([RGB]),
 	NAME([RGBA]),
-	NAME([ABGR])
+	NAME([ABGR]),
+	NAME([ARGB])
 };
 
 static TCHAR* YUV_DISPLAY[] =
