@@ -62,7 +62,10 @@ static TCHAR* YUV_TYPE[] =
 	NAME(Only Y),		//FOURCC_I400	w*h
 	NAME(UYVY | UYNV),	//FOURCC_UYVY	w*h*2
 	NAME(NV12),			//FOURCC_NV12	w*h*3/2
-	NAME(NV21)			//FOURCC_NV21	w*h*3/2
+	NAME(NV21),			//FOURCC_NV21	w*h*3/2
+	NAME(RGB),
+	NAME(RGBA),
+	NAME(ABGR)
 };
 
 #include "libyuv.h"
@@ -76,7 +79,10 @@ static int FOURCC_YUV_TYPE[] =
 	libyuv::FOURCC_I400,
 	libyuv::FOURCC_UYVY,
 	libyuv::FOURCC_NV12,
-	libyuv::FOURCC_NV21
+	libyuv::FOURCC_NV21,
+	libyuv::FOURCC_24BG,
+	libyuv::FOURCC_RGBA,
+	libyuv::FOURCC_ABGR
 };
 
 typedef struct Division
@@ -95,7 +101,10 @@ static Division YUV_Division[] =
 	DIV(1,1),
 	DIV(2,1),
 	DIV(3,2),
-	DIV(3,2)
+	DIV(3,2),
+	DIV(3,1),
+	DIV(4,1),
+	DIV(4,1)
 };
 #undef DIV
 
@@ -108,7 +117,10 @@ static TCHAR* YUV_TYPE_ORDER[] =
 	NAME([YYYY]),
 	NAME([UYVY]),
 	NAME([Y][UV]),
-	NAME([Y][VU])
+	NAME([Y][VU]),
+	NAME([RGB]),
+	NAME([RGBA]),
+	NAME([ABGR])
 };
 
 static TCHAR* YUV_DISPLAY[] =
