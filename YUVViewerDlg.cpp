@@ -541,7 +541,7 @@ void CYUVViewerDlg::Process(uint8_t * frame, int size)
 int CYUVViewerDlg::GetFrameCount()
 {
 	int size = GetFrameSize();
-	if (size < 0) return 0;
+	if (size <= 0) return 0;
 	ULONGLONG fszie = GetFileSize();
 	return (int)(fszie / size);
 }
